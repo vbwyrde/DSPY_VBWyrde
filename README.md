@@ -19,7 +19,8 @@ input_value = 33
 convert_from = "degrees celsius"
 convert_to = "degrees fahrenheit"
 context = "You generate python code."
-question = f"Generate a Python script that gets the input value from the user and converts {input_value} {convert_from} to {convert_to}
+question = f"Generate a Python script that gets the input value from the user and
+converts {input_value} {convert_from} to {convert_to}
 and prints the result as {convert_from} to {convert_to}."
 ```
 ```
