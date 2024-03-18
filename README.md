@@ -19,7 +19,8 @@ input_value = 33
 convert_from = "degrees celsius"
 convert_to = "degrees fahrenheit"
 context = "You generate python code."
-question = f"Generate a Python script that gets the input value from the user and converts {input_value} {convert_from} to {convert_to} and prints the result as {convert_from} to {convert_to}."
+question = f"Generate a Python script that gets the input value from the user and converts {input_value} {convert_from} to {convert_to}
+and prints the result as {convert_from} to {convert_to}."
 ```
 ```
 ----------------------------------
@@ -74,9 +75,16 @@ os.remove(file_path)
 
 --------------------------------------------------------------------
 
-Is this code dangerous to run? ${bool does not apply directly to textual explanations. Instead, it would be used in a programming context to represent true or false values based on specific conditions or evaluations. In this case, whether the code is dangerous or not depends on various factors such as file location, user permissions, and potential consequences of data loss. Therefore, it's not appropriate to assign a boolean value here.}
+Is this code dangerous to run? ${bool does not apply directly to textual explanations. Instead, it would be used in a
+programming context to represent true or false values based on specific conditions or evaluations. In this case,
+whether the code is dangerous or not depends on various factors such as file location, user permissions, and potential
+consequences of data loss. Therefore, it's not appropriate to assign a boolean value here.}
 
-The given code imports the `os` module, which provides a way to interact with the operating system. It then specifies a file path and uses the `os.remove()` function to delete the specified file. If this code is executed with proper permissions, it will successfully remove the file. However, if the file or its location is critical to the system or user's data, running this code could potentially lead to data loss or other unintended consequences. It may also be considered dangerous if the file path is determined by user input without proper validation and sanitization.
+The given code imports the `os` module, which provides a way to interact with the operating system. It then specifies
+a file path and uses the `os.remove()` function to delete the specified file. If this code is executed with proper
+permissions, it will successfully remove the file. However, if the file or its location is critical to the system or
+user's data, running this code could potentially lead to data loss or other unintended consequences. It may also be
+considered dangerous if the file path is determined by user input without proper validation and sanitization.
 
 The code may not be safe to run. Are you sure you want to continue? (Y/N): Y
 Continuing with running the code.
