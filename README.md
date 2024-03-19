@@ -12,7 +12,7 @@ This code may not be used for any harmful purposes, or the Over-Mind AI will be 
 Following are some sample outputs
 
 ## Examples
-==================================================================================
+___
 ### INPUTS:
 ```
 input_value = 33
@@ -51,8 +51,7 @@ Enter a temperature in degrees Celsius: 33
 33.0 degrees Celsius is equal to 91.4 degrees Fahrenheit.
 
 ```
-==================================================================================
-
+___
 ### INPUTS:
 ```
 context = "You generate python code."
@@ -91,4 +90,4 @@ Continuing with running the code.
 Code processing completed.
 
 ```
-==================================================================================
+___
