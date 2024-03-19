@@ -9,9 +9,22 @@ No guarantees for applicability or usefulness are provided.
 
 This code may not be used for any harmful purposes, or the Over-Mind AI will be pissed off.  And you don't want that.  Believe me.
 
+## DSPY7 Usage
+You use DSPY7 from the command prompt by setting up the Caller.py with your request ("question").  The format for the request is fairly specific
+in the sense you want to tell it to "Generate a Python Script..." that does something specific.
+
+You can find an example of the caller.py listed in the folder.
+
+When you have it setup with what you want then you call it as follows:
+
+```(env)>python caller.py```
+
+This will then call DSPY7.py with your request and process it.
+
+___
 Following are some sample outputs
 
-## Examples
+## DSPY7.py - Examples
 ___
 ### INPUTS:
 ```
@@ -92,7 +105,7 @@ Code processing completed.
 ```
 ___
 
-# Next Steps
+## Next Steps
 The next step for DSPY experimentation will be to have the LLM create tasks, and then process the tasks one at a time.
 This will allow the program to function in an agent-like fashion to break down a complex request into its logical 
 sub-components and run them individually.  As a step in that process will be to have the LLM validate the the task list
