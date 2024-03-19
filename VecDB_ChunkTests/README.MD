@@ -1,1 +1,2 @@
-# CHECK TO SEE WHAT CHUNK SIZE AND OVERLAP SIZES WORK BEST FOR EMBEDDING DATA INTO VECTOR DBS. 
+# Purpose
+Run tests to determine what Chunk and Overlap sizes work best for embedding into Vector Database given the sample data.
