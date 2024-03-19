@@ -91,3 +91,10 @@ Code processing completed.
 
 ```
 ___
+
+# Next Steps
+The next step for DSPY experimentation will be to have the LLM create tasks, and then process the tasks one at a time.
+This will allow the program to function in an agent-like fashion to break down a complex request into its logical 
+sub-components and run them individually.  As a step in that process will be to have the LLM validate the the task list
+asking it to check to ensure the order of the tasks is correct, and that the overall structure of the task list
+is correctly aligned to the goal of the intitial request. 
