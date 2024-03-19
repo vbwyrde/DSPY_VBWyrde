@@ -67,7 +67,7 @@ question = f"question = "Generate a python script that will delete the file c:/t
 import os
 
 # Specify the file path to be deleted
-file_path = "c:/temp/TestDeleteMe.txt"
+file_path = "c:/tmp/DeleteMe.txt"
 
 # Use the os.remove() function to delete the file
 os.remove(file_path)
