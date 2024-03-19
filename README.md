@@ -55,7 +55,7 @@ ___
 ### INPUTS:
 ```
 context = "You generate python code."
-question = f"question = "Generate a python script that will delete the file c:/temp/TestDeleteMe.txt."
+question = f"question = "Generate a python script that will delete the file c:/tmp/DeleteMe.txt."
 ```
 ```
 ----------------------------------
