@@ -126,7 +126,12 @@ It produces the following output:
 
 
 Context: You generate top quality python code, paying careful attention to the details of the requirements.
-Question: Generate Python code that converts 44 miles to feet. Then the code should convert the 44 to yards. Then the code should print the conversion statement:  miles to feet. then the code should print the conversion statement:  miles to yards. Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it. Then the code should have error handling routines. Then the code should print a success message, and show the name of the file and what folder the file was saved to.
+Question: Generate Python code that converts 44 miles to feet. Then the code should convert the 44 to yards.
+Then the code should print the conversion statement:  miles to feet.
+Then the code should print the conversion statement:  miles to yards.
+Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it.
+Then the code should have error handling routines.
+Then the code should print a success message, and show the name of the file and what folder the file was saved to.
 ------------------
 Generate Tasks...
 Inside GenerateTasks...
