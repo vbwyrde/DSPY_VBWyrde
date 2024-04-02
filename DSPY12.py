@@ -16,46 +16,6 @@ MyLM = dspy.OpenAI(
 )
 dspy.settings.configure(lm=MyLM, rm=colbertv2_wiki17_abstracts)
 
-
-# class MultiHop(dspy.Module):
-#     def __init__(self, lm, passages_per_hop=3):
-#         self.Generate_query = dspy.ChainOfThought("context, question -> query")
-#         self.retrieve = dspy.Retrieve(k=passages_per_hop)
-#         self.generate_answer = dspy.ChainOfThought("context, question -> answer")
-
-#     def forward(self, context, question):
-#         print("Inside MultiHop 1")
-#         context_list = [context]  # Convert context to a list
-
-#         # Combine all tasks into a single string before sending to Retriever
-#         combined_tasks = "\n".join(question.split("\n")[1:])
-
-#         query = self.Generate_query(
-#             context=context_list[-1],
-#             question=f"Given the following tasks:\n{combined_tasks}\nWhat is the Python code to accomplish them?",
-#         ).query
-#         retrieved_passages = self.retrieve(query).passages
-#         context_list.extend(retrieved_passages)
-#         return self.generate_answer(context=context_list, question=question)
-
-
-def validate_python_code_ast(code):
-    """
-    Attempts to parse the provided Python code using ast.parse()
-
-    Args:
-      code: The Python code string to validate.
-
-    Returns:
-      True if the code can be parsed without errors, False otherwise.
-    """
-    try:
-        ast.parse(code)
-        return True
-    except (SyntaxError, ParserError):
-        return False
-
-
 class MultiHop(dspy.Module):
     def __init__(self, lm, passages_per_hop=3):
         self.Generate_query = dspy.ChainOfThought("context, question -> query")
@@ -73,26 +33,6 @@ class MultiHop(dspy.Module):
             context_list.extend(retrieved_passages)
         return self.generate_answer(context=context_list, question=question)
 
-
-class MultiHopTasks(dspy.Module):
-    def __init__(self, lm, passages_per_hop=3):
-        self.Generate_query = dspy.ChainOfThought("context, question -> query")
-        self.retrieve = dspy.Retrieve(k=passages_per_hop)
-        self.generate_answer = dspy.ChainOfThought("context, question -> task_list")
-
-    def forward(self, context, question):
-        print("Inside MultiHopTasks")
-
-        context_list = [context]  # Convert context to a list
-        for _ in range(2):
-            query = self.Generate_query(
-                context=context_list[-1], question=question
-            ).query
-            retrieved_passages = self.retrieve(query).passages
-            context_list.extend(retrieved_passages)
-        return self.generate_answer(context=context_list, question=question)
-
-
 class GenerateTasks(dspy.Signature):
     """Generate a list of tasks in structured format."""
 
@@ -102,16 +42,9 @@ class GenerateTasks(dspy.Signature):
 
     def forward(context, question):
         print("Inside GenerateTasks...")
-        # prompt = f"Context: {context}\nQuestion: {question}\nGenerate a list of tasks in bullet points that fulfill the requirements."
         pred_generate_tasks = dspy.Predict("context, question -> tasks")
         TasksList = pred_generate_tasks(context=context, question=question)
-
-        # multihop = MultiHop(MyLM)
-        # response = multihop.forward(context=context, question=question)
-        # TasksList = response.answer
-
         return TasksList
-
 
 def DoesImportModuleExist(code):
     modules = re.findall(r"import\s+(\w+)", code)
@@ -139,37 +72,46 @@ def DoesImportModuleExist(code):
     else:
         return True
 
+def validate_python_code_ast(code):
+    """
+    Attempts to parse the provided Python code using ast.parse()
 
-def ValidateCode(code, task):
-    validation_question = f"The requirements are: {task}. Does the following code fulfill them? True or False\n{code}"
-    IsCodeValid = MultiHop(MyLM).forward(context="...", question=validation_question)
-    return IsCodeValid.answer
+    Args:
+      code: The Python code string to validate.
 
+    Returns:
+      True if the code can be parsed without errors, False otherwise.
+    """
+    try:
+        ast.parse(code)
+        return True
+    except (SyntaxError, ParserError):
+        return False
 
 def ValidateCodeMatchesTask(CodeBlock, task):
     print("Inside ValidateCodeMatchesTask...")
     EvalQuestion = (
         "The requirements are: "
         + str(task)
-        + "\n"
+        + "\n\n"
         + "And the code is this: \n"
+        + "----------------------------------------------------- \n"
         + CodeBlock
-        + "\n"
-        + "Is it true that the code fullfil the requirements? True or False"
+        + "----------------------------------------------------- \n"
+        + "Does this code fulfill the all of requirements? True or False"
     )
-    print("A *************************************")
+    print("** EVAL QUESTION ********************")
     print(EvalQuestion)
     multihop = MultiHop(MyLM)
     response = multihop.forward(
-        context="You are an expert programm who evalutes code to determine if it meets the requirements. Return True or False.",
+        context="You are a Quality Assurance expert python programmer who evalutes code to determine if it meets the requirements. Return True or False.",
         question=EvalQuestion,
     )
-    print("B *************************************")
+    print("** EVAL RESPONSE ********************")
     print(response)
-    print("C *************************************")
+    print("** END EVALUATION *******************")
 
     return response
-
 
 def run_python_code(code):
     try:
@@ -177,13 +119,11 @@ def run_python_code(code):
         code = code.replace("Â ", "")
         code = code.replace("```", "***", 1)
         code = code.replace("```", "***", 1)
-        print(
-            ("--------------------------------------------------------------------\n")
-        )
+        print("--------------------------------------------------------------------\n")
+        
         print(code + "\n")
-        print(
-            ("--------------------------------------------------------------------\n")
-        )
+        print("--------------------------------------------------------------------\n")
+       
 
         InstallModule = DoesImportModuleExist(code)
         if InstallModule:
@@ -217,6 +157,12 @@ def run_python_code(code):
                     print("\n" + "Code processing completed.")
                 except SyntaxError as e:
                     print(f"There was an Error executing code: {e}", file=sys.stderr)
+            else:
+                print("Code did not pass ast validation.")
+                # ================================================
+                # NOTE: HERE WE CAN USE AST TO TRY TO FIX THE CODE
+                # ================================================
+
         else:
 
             print(response.rationale + "\n")
@@ -237,7 +183,6 @@ def run_python_code(code):
     except SyntaxError as e:
         print(f"Error executing code: {e}")
 
-
 def process_generated_code(code):
     """
     Processes the generated code by cleaning and potentially performing additional checks.
@@ -247,47 +192,6 @@ def process_generated_code(code):
     cleaned_code = cleaned_code.replace("```", "***", 1)
     cleaned_code = cleaned_code.replace("```", "***", 1)
     return cleaned_code
-
-
-def build_code_block(context, question):
-    """
-    Generates, processes, and compiles the code for a given task.
-
-    Combines all tasks into a single question before sending to MultiHop.
-    """
-    code = GenCode(context=context, task=question)
-    processed_code = process_generated_code(code)
-    return processed_code
-
-
-def compile_tasks_into_one_block(tasks):
-    """
-    Compiles a list of task code strings into a single Python code block.
-
-    Args:
-        tasks: A list of strings, where each string represents the code for a task.
-
-    Returns:
-        A single string containing the combined code block for all tasks.
-
-    This function iterates through the provided task codes and joins them with appropriate
-    separators to create a single executable block. It ensures proper separation
-    between tasks to avoid syntax errors.
-    """
-    # Initialize an empty string to hold the compiled code
-    compiled_code_block = ""
-
-    # Iterate over each task's code
-    for task_code in tasks:
-        # **Prepend each task code with two newlines**
-        task_code = "\n\n" + task_code
-
-        # Append the task's code to the compiled code block
-        compiled_code_block += task_code
-
-    # Return the compiled code block
-    return compiled_code_block
-
 
 def GenCode(context, task, depth=0, max_depth=5):
     print("Enter GenCode (" + str(depth) + ")...")
@@ -304,11 +208,11 @@ def GenCode(context, task, depth=0, max_depth=5):
         print(generated_code)
         print("-----------------------------------------")
 
-        isCodeValid = ValidateCode(generated_code, task)
+        isCodeValid = ValidateCodeMatchesTask(generated_code, task)
         print("IsCodeValid: " + str(isCodeValid))
 
         if isCodeValid:
-            print("isCodeValid is True...")
+            print("IsCodeValid is True...")
             print(generated_code)
             if generated_code:
                 start_marker = "***python"
@@ -328,7 +232,6 @@ def GenCode(context, task, depth=0, max_depth=5):
     except Exception as e:
         print(str(e))
         sys.exit(1)
-
 
 class Main:
     def __init__(self, context, question):
@@ -354,7 +257,6 @@ class Main:
 
                 print("=================================================")
                 print("Tasks to be processed:")
-                # print(tasks)
                 for task in tasks:
                     print(task)
                 print("=================================================")
