@@ -1,4 +1,4 @@
-﻿import importlib
+import importlib
 import re
 import sys
 
@@ -11,25 +11,10 @@ MyLM = dspy.OpenAI(
     api_base="http://localhost:1234/v1/",
     api_key="sk-111111",
     model="macadeliccc/laser-dolphin-mixtral-2x7b-dpo",
-    temperature=0.0,
+    temperature=0.6,
     max_tokens=7000,
 )
 dspy.settings.configure(lm=MyLM, rm=colbertv2_wiki17_abstracts)
-
-
-class GenerateTasks(dspy.Signature):
-    """Generate a list of tasks in structured format."""
-
-    context = dspy.InputField(desc="You create a high level project task list.")
-    question = dspy.InputField()
-    tasks = dspy.OutputField(desc="Enumerated Task List", type=list)
-
-    def forward(context, question):
-        # prompt = "Context: {context}\nQuestion: {question}\nGenerate a list of tasks in bullet points that fulfill the requirements."
-        pred_generate_tasks = dspy.Predict("context, question -> tasks")
-        TasksList = pred_generate_tasks(context=context, question=question)
-
-        return TasksList
 
 
 class MultiHop(dspy.Module):
@@ -85,6 +70,26 @@ class MultiHopTasks(dspy.Module):
             retrieved_passages = self.retrieve(query).passages
             context_list.extend(retrieved_passages)
         return self.generate_answer(context=context_list, question=question)
+
+
+
+class GenerateTasks(dspy.Signature):
+    """Generate a list of tasks in structured format."""
+
+    context = dspy.InputField(desc="You create a high level project task list.")
+    question = dspy.InputField()
+    tasks = dspy.OutputField(desc="Enumerated Task List", type=list)
+
+    def forward(context, question):
+        #prompt = f"Context: {context}\nQuestion: {question}\nGenerate a list of tasks in bullet points that fulfill the requirements."
+        pred_generate_tasks = dspy.Predict("context, question -> tasks")
+        TasksList = pred_generate_tasks(context=context, question=question)
+ 
+        #multihop = MultiHop(MyLM)
+        #response = multihop.forward(context=context, question=question)
+        #TasksList = response.answer
+
+        return TasksList
 
 
 def DoesImportModuleExist(code):
@@ -211,7 +216,7 @@ def build_code_block(context, question):
 
     Combines all tasks into a single question before sending to MultiHop.
     """
-    code = GenCode(context=context, question=question)
+    code = GenCode(context=context, task=question)
     processed_code = process_generated_code(code)
     return processed_code
 
@@ -248,28 +253,20 @@ def compile_tasks_into_one_block(tasks):
 def GenCode(context, task, depth=0, max_depth=5):
     print("Enter GenCode at Depth: " + str(depth))
 
-    # print("context : " + context + "\n")
-    # print("task: " + task + "\n")
-
-    combined_tasks = "\n".join(task.split("\n")[1:])
     multihop = MultiHop(MyLM)
     response = multihop.forward(context=context, question=task)
-    #response = multihop.forward(
-    #    context=context,
-    #    question=f"Given the following tasks:\n{combined_tasks}\nWhat is the Python code to accomplish them?",
-    #)
+
     try:
         generated_code = response.answer
         generated_code = generated_code.replace("Â ", "")
         generated_code = generated_code.replace("```", "***", 1)
         generated_code = generated_code.replace("```", "***", 1)
-        print("-----------------------------------------")
+        print("-- GENERATED CODE -----------------------")
         print(generated_code)
         print("-----------------------------------------")
 
         isCodeValid = ValidateCode(generated_code, task)
         print("IsCodeValid: " + str(isCodeValid))
-        # print(type(isCodeValid))
 
         if isCodeValid:
             print("isCodeValid is True...")
@@ -292,9 +289,6 @@ def GenCode(context, task, depth=0, max_depth=5):
     except Exception as e:
         print(str(e))
         sys.exit(1)
-
-    # ... (code for generating code)
-
 
 class Main:
     def __init__(self, context, question):
@@ -328,7 +322,7 @@ class Main:
 
                     print(
                         f"Task {task_index}: {cleaned_task}"
-                    )  # Print task number and description
+                    )  
 
                     Code_Block = build_code_block(
                         context=context,
