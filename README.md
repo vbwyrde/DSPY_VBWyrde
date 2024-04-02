@@ -326,6 +326,12 @@ Along the way I tried to use Teleprompter but that turned out to be far more com
 ## Conclusions
 I found through my experiments between DSPY7 and DSPY12 that simpler is better.  Along the way I tried breaking down each task into a separate GenCode and validation, but this turned out to not only be overly time consuming, and more complicated, but the results were far worse than the simplified version that DSPY12 turned out to be.  This is likely because breaking it down into individual code generation pieces based on each task generating code separately caused the LLM to not see the overall context of the code and therefore come up with solutions that when combined, actually didn't work well.  DSPY12 is the best of the efforts.
 
-It includes a simple GenCode method, a code validation that attempts to ensure the generated code actually matches the tasks derived from the original request, an ast validation to ensure the code will compile, and a Danger Check to validate that the code is not potentially harmful to run.
+DSPY12 includes 
+1) a simple GenCode method. 
+2) a code validation that attempts to ensure the generated code actually matches the tasks derived from the original request.
+3) an ast validation to ensure the code will compile.
+4) a Danger Check to validate that the code is not potentially harmful to run, and if it is found dangerous then a Y/N option for the user to stop processing or continue.
+5) a validation that needed components are installed, and provides a method for installing them if they are not installed.
+6) a detailed print of the progress for review.
 
 This has been utterly fascinating, and I am very grateful to the Stamford researchers for creating DSPY!  Wonderful stuff!  MultiHop and its predicotr features are really interesting and helpful. 
