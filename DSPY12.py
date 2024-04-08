@@ -7,13 +7,21 @@ import dspy
 colbertv2_wiki17_abstracts = dspy.ColBERTv2(
     url="http://20.102.90.50:2017/wiki17_abstracts"
 )
+#MyLM = dspy.OpenAI(
+#    api_base="http://localhost:1234/v1/",
+#    api_key="sk-111111",
+#    model="macadeliccc/laser-dolphin-mixtral-2x7b-dpo",
+#    temperature=0.6,
+#    max_tokens=7000,
+#)
 MyLM = dspy.OpenAI(
-    api_base="http://localhost:1234/v1/",
-    api_key="sk-111111",
-    model="macadeliccc/laser-dolphin-mixtral-2x7b-dpo",
+    api_base="https://api.fireworks.ai/inference/v1/",
+    api_key="Fireworks_API_KEY",
+    model="accounts/fireworks/models/mixtral-8x7b-instruct",            
     temperature=0.6,
-    max_tokens=7000,
+    max_tokens=7000
 )
+print("MyLM: " + str(MyLM))
 dspy.settings.configure(lm=MyLM, rm=colbertv2_wiki17_abstracts)
 
 class MultiHop(dspy.Module):
@@ -124,7 +132,7 @@ def run_python_code(code):
         print(code + "\n")
         print("--------------------------------------------------------------------\n")
        
-
+        compiled_code = ""
         InstallModule = DoesImportModuleExist(code)
         if InstallModule:
             print("Required Modules are Installed")
