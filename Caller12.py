@@ -1,20 +1,21 @@
 import subprocess
 
 input_value = 44
-convert_from = "miles"
-convert_to = "feet"
-convert_to2 = "yards"
+convert_from = "degrees fahrenheit"
+convert_to = "degrees celsius"
+convert_to2 = "degrees Kelvin"
 context = "You generate top quality python code, paying careful attention to the details of the requirements."
+
 
 question = (f"Generate Python code that converts {input_value} {convert_from} to {convert_to}."
             f" Then the code should convert the {input_value} to {convert_to2}."
             f" Then the code should print the conversion statement:  {convert_from} to {convert_to}."
             f" then the code should print the conversion statement:  {convert_from} to {convert_to2}."
             f" Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it."
-            f" Then the code should have error handling routines."
+            f" Then the code should have error handling routines, and print any errors to the console."
+            f" Then the code ensure that all variables and functions are correctly created and referenced."
             f" Then the code should print a success message, and show the name of the file and what folder the file was saved to."
             )
-
 
 #
 # input_value = 100
@@ -31,4 +32,4 @@ question = (f"Generate Python code that converts {input_value} {convert_from} to
 
 # compile_tasks
 
-subprocess.call(["python", "DSPY12.py", context, question])
+subprocess.call(["python", "C:\\Users\\mabramsR\\source\\repos\\DSPY_MA\\DSPY12.py", context, question])
