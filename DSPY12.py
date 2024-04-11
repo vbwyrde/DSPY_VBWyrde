@@ -3,6 +3,7 @@ import re
 import sys
 import ast
 import dspy
+import traceback
 
 colbertv2_wiki17_abstracts = dspy.ColBERTv2(
     url="http://20.102.90.50:2017/wiki17_abstracts"
@@ -11,12 +12,12 @@ colbertv2_wiki17_abstracts = dspy.ColBERTv2(
 #    api_base="http://localhost:1234/v1/",
 #    api_key="sk-111111",
 #    model="macadeliccc/laser-dolphin-mixtral-2x7b-dpo",
-#    temperature=0.6,
-#    max_tokens=7000,
+#    temperature=0.4,
+#    max_tokens=9000,
 #)
 MyLM = dspy.OpenAI(
     api_base="https://api.fireworks.ai/inference/v1/",
-    api_key="Fireworks_API_KEY",
+    api_key="AaM4Ha2kUZmzr7fkAMEp6iv0QrJOpsOuAfnLaqQtH88egNA4",
     model="accounts/fireworks/models/mixtral-8x7b-instruct",            
     temperature=0.6,
     max_tokens=7000
@@ -44,7 +45,7 @@ class MultiHop(dspy.Module):
 class GenerateTasks(dspy.Signature):
     """Generate a list of tasks in structured format."""
 
-    context = dspy.InputField(desc="You create a high level project task list.")
+    context = dspy.InputField(desc="You create a high level project task list for the python programmer that includes all relevant details.")
     question = dspy.InputField()
     tasks = dspy.OutputField(desc="Enumerated Task List", type=list)
 
@@ -56,14 +57,16 @@ class GenerateTasks(dspy.Signature):
 
 def DoesImportModuleExist(code):
     modules = re.findall(r"import\s+(\w+)", code)
+    from_imports = re.findall(r"from\s+(\w+)\s+import", code)
     missing_modules = []
 
     for module_name in modules:
-        try:
-            importlib.import_module(module_name)
-            print(f"{module_name} is already installed.")
-        except ModuleNotFoundError:
-            missing_modules.append(module_name)
+        if module_name not in from_imports:
+            try:
+                importlib.import_module(module_name)
+                print(f"{module_name} is already installed.")
+            except ModuleNotFoundError:
+                missing_modules.append(module_name)
 
     if missing_modules:
         user_input = input(
@@ -94,7 +97,35 @@ def validate_python_code_ast(code):
         ast.parse(code)
         return True
     except (SyntaxError, ParserError):
+        tb = traceback.format_exc()
+        print(f"There was an Error: {e}\n{tb}", file=sys.stderr)
         return False
+
+def ValidateCodeImports(CodeBlock, task):
+    print("Inside ValidateCodeImports...")
+    EvalQuestion = (
+        "The requirements are: "
+        + str(task)
+        + "\n\n"
+        + "And the code is this: "
+        + "\n ----------------------------------------------------- \n"
+        + CodeBlock
+        + "\n ----------------------------------------------------- \n"
+        + "Are the python imports correct and necessary to execute this code? True or False"
+    )
+    print("** EVAL QUESTION PYTHON IMPORTS *****")
+    print(EvalQuestion)
+    multihop = MultiHop(MyLM)
+    response = multihop.forward(
+        context="You are a Quality Assurance expert python programmer who evalutes code to determine if it meets the requirements. Return True or False.",
+        question=EvalQuestion,
+    )
+    print("** EVAL RESPONSE PYTHON IMPORTS *****")
+    print(response)
+    print("** END EVALUATION PYTHON IMPORTS ****")
+
+    return response
+
 
 def ValidateCodeMatchesTask(CodeBlock, task):
     print("Inside ValidateCodeMatchesTask...")
@@ -103,10 +134,10 @@ def ValidateCodeMatchesTask(CodeBlock, task):
         + str(task)
         + "\n\n"
         + "And the code is this: \n"
-        + "----------------------------------------------------- \n"
+        + "\n ----------------------------------------------------- \n"
         + CodeBlock
-        + "----------------------------------------------------- \n"
-        + "Does this code fulfill the all of requirements? True or False"
+        + "\n ----------------------------------------------------- \n"
+        + "Does this code fulfill the all of requirements and are all python libraries used in the code valid and useful? True or False"
     )
     print("** EVAL QUESTION ********************")
     print(EvalQuestion)
@@ -127,12 +158,12 @@ def run_python_code(code):
         code = code.replace("Â ", "")
         code = code.replace("```", "***", 1)
         code = code.replace("```", "***", 1)
-        print("--------------------------------------------------------------------\n")
-        
+        print("\n ----------------------------------------------------- \n")
         print(code + "\n")
-        print("--------------------------------------------------------------------\n")
+        print("\n ----------------------------------------------------- \n")
        
         compiled_code = ""
+
         InstallModule = DoesImportModuleExist(code)
         if InstallModule:
             print("Required Modules are Installed")
@@ -159,12 +190,18 @@ def run_python_code(code):
                 )
                 compiled_code = compile(code, "file", "exec")
                 print("Code is compiled... Run Code...")
+                print("Here is the precompiled code that will run: \n\n")
+                print("------------------------------------- \n \n")                
+                print(code)
+                print("------------------------------------- \n \n")                
+
                 try:
                     print(compiled_code)
                     exec(compiled_code)
                     print("\n" + "Code processing completed.")
                 except SyntaxError as e:
-                    print(f"There was an Error executing code: {e}", file=sys.stderr)
+                    tb = traceback.format_exc()
+                    print(f"There was an Error: {e}\n{tb}", file=sys.stderr)
             else:
                 print("Code did not pass ast validation.")
                 # ================================================
@@ -181,15 +218,36 @@ def run_python_code(code):
             if user_input.upper() == "Y":
                 print("Continuing with running the code.\n")
                 try:
-                    print(compiled_code)
-                    exec(compiled_code)
-                    print("\n" + "Code processing completed.")
+                    print("Validate the compiled code with ast...")
+                    
+                    ast_valid = validate_python_code_ast(code)
+                    print(ast_valid)
+                    if ast_valid:
+                        print(
+                            "This code is safe to run and passed ast validation... compiling code..."
+                        )
+                        compiled_code = compile(code, "file", "exec")
+                        print("Code is compiled... Run Code...")
+                        try:
+                            print(compiled_code)
+                            exec(compiled_code, globals(), locals())
+                            print("\n" + "Code processing completed.")
+                        except SyntaxError as e:
+                            tb = traceback.format_exc()
+                            print(f"There was an Error executing the code: {e}\n{tb}", file=sys.stderr)
+                    else:
+                        print("Code did not pass ast validation.")
+                        # ================================================
+                        # NOTE: HERE WE CAN USE AST TO TRY TO FIX THE CODE
+                        # ================================================
                 except SyntaxError as e:
-                    print(f"There was an Error executing code: {e}", file=sys.stderr)
+                    tb = traceback.format_exc()
+                    print(f"There was an Error executing the code: {e}\n{tb}", file=sys.stderr)
             else:
                 print("Exiting without running the code.")
     except SyntaxError as e:
-        print(f"Error executing code: {e}")
+        tb = traceback.format_exc()
+        print(f"There was an Error: {e}\n{tb}", file=sys.stderr)
 
 def process_generated_code(code):
     """
@@ -222,6 +280,17 @@ def GenCode(context, task, depth=0, max_depth=5):
         if isCodeValid:
             print("IsCodeValid is True...")
             print(generated_code)
+
+            AreImportsValid = ValidateCodeImports(generated_code, task)
+            if AreImportsValid:
+                print("Import Statements are valid and useful for this code.")
+            else:
+                if depth >= max_depth:
+                    raise ValueError("Maximum recursion depth reached")
+                else:
+                    context = context + " Validate and fix the import statements."
+                    GenCode(context, task, depth=depth + 1)
+
             if generated_code:
                 start_marker = "***python"
                 end_marker = "***"
