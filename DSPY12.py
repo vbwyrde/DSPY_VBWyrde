@@ -20,13 +20,13 @@ colbertv2_wiki17_abstracts = dspy.ColBERTv2(
 #    temperature=0.6,
 #    max_tokens=7000,
 # )
-
  
 try:
     MyLM = dspy.OpenAI(
         api_base="https://api.fireworks.ai/inference/v1/",
         api_key="API_KEY",
-        model="accounts/fireworks/models/mistral-7b-instruct-4k",
+        #model="accounts/fireworks/models/mistral-7b-instruct-4k",
+        model="accounts/fireworks/models/mixtral-8x22b-instruct",
         temperature=0.6,
         max_tokens=3000,
     )
@@ -240,6 +240,8 @@ def run_python_code(code):
 
             if user_input.upper() == "Y":
                 print("Continuing with running the code.\n")
+                compiled_code = compile(code, "file", "exec")
+                print("Code is compiled... Run Code...")
                 try:
                     print(compiled_code)
                     exec(compiled_code)
