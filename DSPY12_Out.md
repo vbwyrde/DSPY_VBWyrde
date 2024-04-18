@@ -1,5 +1,5 @@
 # DSPY12.py OUTPUT
-This is the output of DSPY12.py  
+This is the output of DSPY12.py ... note: a good deal of the output here are print statements to help trace the script's operations.  If / when I get to a final version, it will remove most of the print statements you see here.
 
 ----
 MyLM is initialized.
