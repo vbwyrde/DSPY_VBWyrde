@@ -60,7 +60,8 @@ except Exception as e:
 ```
 -----------------------------------------
 Inside ValidateCodeMatchesTask...
-** EVAL QUESTION ``````````````````````````````````````````````````````*
+
+** EVAL QUESTION **
 
 The requirements are: Generate Python code that converts 43 miles to feet. Then the code should convert the 43 to yards. Then the code should print the conversion statement:  miles to feet. then the code should print the conversion statement:  miles to yards. Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it. Then the code should have error handling routines using traceback. Then the code should print a success message, and show the name of the file and what folder the file was saved to.
 
@@ -95,13 +96,13 @@ except Exception as e:
 -----------------------------------------------------
 Does this code fulfill each and every requirement in the task list? True or False
 Inside MultiHop 1
-** EVAL RESPONSE ``````````````````````````````````````````````````````
+** EVAL RESPONSE **
 
 Prediction(
     rationale='produce the answer. We have to check if the given Python code fulfills every requirement in the task list.\n1. The code converts 43 miles to feet: feet = 43 * 5280\n2. The code converts 43 miles to yards: yards = 43 * 1760\n3. The code prints the conversion statements: print(f"43 miles is equal to {feet} feet") and print(f"43 miles is equal to {yards} yards")\n4. The code creates a file \'conversion.txt\' and writes the conversion statements to it: with open("c:/temp/conversion.txt", "w") as file: file.write(f"43 miles is equal to {feet} feet\\n") and file.write(f"43 miles is equal to {yards} yards\\n")\n5. The code has error handling routines using traceback: except Exception as e: print(f"An error occurred: {e}") and print(traceback.format_exc())\n6. The code prints a success message and shows the name of the file and the folder where the file was saved: print(f"File \'conversion.txt\' has been saved to \'c:/temp/\'")\n\nSince the code fulfills every requirement in the task list, the answer is True.',
     answer='True'
 )
-** END EVALUATION ```````````````````````````````````````````````````**
+** END EVALUATION **
 
 IsCodeValid: Prediction(
     rationale='produce the answer. We have to check if the given Python code fulfills every requirement in the task list.\n1. The code converts 43 miles to feet: feet = 43 * 5280\n2. The code converts 43 miles to yards: yards = 43 * 1760\n3. The code prints the conversion statements: print(f"43 miles is equal to {feet} feet") and print(f"43 miles is equal to {yards} yards")\n4. The code creates a file \'conversion.txt\' and writes the conversion statements to it: with open("c:/temp/conversion.txt", "w") as file: file.write(f"43 miles is equal to {feet} feet\\n") and file.write(f"43 miles is equal to {yards} yards\\n")\n5. The code has error handling routines using traceback: except Exception as e: print(f"An error occurred: {e}") and print(traceback.format_exc())\n6. The code prints a success message and shows the name of the file and the folder where the file was saved: print(f"File \'conversion.txt\' has been saved to \'c:/temp/\'")\n\nSince the code fulfills every requirement in the task list, the answer is True.',
@@ -218,6 +219,7 @@ AST Validation Passed...
 AST Validation A: True
 Code has been processed!
 Running the code...
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 -- RUN THE FOLLOWING CODE --
@@ -295,4 +297,5 @@ Code is compiled... Run Code...
 File 'conversion.txt' has been saved to 'c:/temp/'
 
 Code processing completed.
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
