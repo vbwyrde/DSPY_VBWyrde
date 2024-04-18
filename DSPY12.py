@@ -25,8 +25,10 @@ colbertv2_wiki17_abstracts = dspy.ColBERTv2(
 try:
     MyLM = dspy.OpenAI(
         api_base="https://api.fireworks.ai/inference/v1/",
-        api_key="soQ45IEME31bDZTjkMy0yPzaqmtYQNZcUnKMnVQ3k2bAGlA7",
-        model="accounts/fireworks/models/mistral-7b-instruct-4k" 
+        api_key="API_KEY",
+        model="accounts/fireworks/models/mistral-7b-instruct-4k",
+        temperature=0.6,
+        max_tokens=3000,
     )
     print("MyLM is initialized.")
     dspy.settings.configure(lm=MyLM, rm=colbertv2_wiki17_abstracts, timeout=30)
@@ -152,26 +154,27 @@ def ValidateCodeMatchesTask(CodeBlock, task):
         + "----------------------------------------------------- \n"
         + CodeBlock + "\n"
         + "----------------------------------------------------- \n"
-        + "Does this code fulfill the all of requirements? True or False"
+        + "Does this code fulfill each and every requirement in the task list? True or False"
     )
-    print("** EVAL QUESTION ********************")
+    print("** EVAL QUESTION ******************************************************* \n")
     print(EvalQuestion)
     multihop = MultiHop(MyLM)
     response = multihop.forward(
-        context="You are a Quality Assurance expert python programmer who evalutes code to determine if it meets the requirements. Return True or False.",
+        context="You are a Quality Assurance expert python programmer who evalutes code to determine if it meets all of the the requirements.  Every item in the task list must be met by the code. Return True or False.",
         question=EvalQuestion,
     )
-    print("** EVAL RESPONSE ********************")
+    print("** EVAL RESPONSE ****************************************************** \n")
     print(response)
-    print("** END EVALUATION *******************")
+    print("** END EVALUATION ***************************************************** \n")
 
     return response
 
 def run_code(Code_Block):
     print("Running the code...")
     try:
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
         run_python_code(Code_Block)
-        print("Code has been run successfully!")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
     except Exception as e:
         print(f"Failed to run code: {e}")
         sys.exit(1)
@@ -332,9 +335,7 @@ class Main:
     
                print("Validate code...")
                CodeValidated = ValidateCodeMatchesTask(CodeBlock=Code_Block, task=tasks)
-               print("========== CodeValidated ================")
-               print(CodeValidated)
-               print("=========================================")
+               print("Is code valid: " + str(CodeValidated))
     
                if CodeValidated:
                    ast_valid = validate_python_code_ast(Code_Block)
@@ -369,9 +370,25 @@ if __name__ == "__main__":
     #context = sys.argv[1]
     #question = sys.argv[2]
     
-    # NOTE: TO MAKE DEBUGGING IN VISUAL STUDIO EASIER WE ARE LOADING THE CALL PARAMETERS HERE SO THAT WE DO NOT NEED TO DEBUG INTO THE SUBPROCESS() FROM THE CALLER
-    context = "You generate python code."
-    question = "Generatea python script that prints 'hello world' to the console."
+    #context = "You generate python code."
+    #question = "Generatea python script that prints 'hello world' to the console."
+
+
+    input_value = 43
+    convert_from = "miles"
+    convert_to = "feet"
+    convert_to2 = "yards"
+    context = "You generate top quality python code, paying careful attention to the details of the requirements."
+    
+    question = (f"Generate Python code that converts {input_value} {convert_from} to {convert_to}."
+                f" Then the code should convert the {input_value} to {convert_to2}."
+                f" Then the code should print the conversion statement:  {convert_from} to {convert_to}."
+                f" then the code should print the conversion statement:  {convert_from} to {convert_to2}."
+                f" Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it."
+                f" Then the code should have error handling routines."
+                f" Then the code should print a success message, and show the name of the file and what folder the file was saved to."
+                )
+
 
     print("Inside DSPY12.py...")
     print(context)
