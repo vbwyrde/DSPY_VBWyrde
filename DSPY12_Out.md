@@ -3,8 +3,11 @@ This is the output of DSPY12.py
 
 ----
 MyLM is initialized.
+
 Settings are configured.
+
 Starting DSPY12.py...
+
 You generate top quality python code, paying careful attention to the details of the requirements.
 
 Generate Python code that converts 43 miles to feet. Then the code should convert the 43 to yards. Then the code should print the conversion statement:  miles to feet. then the code should print the conversion statement:  miles to yards. Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it. Then the code should have error handling routines using traceback. Then the code should print a success message, and show the name of the file and what folder the file was saved to.
@@ -12,6 +15,7 @@ Generate Python code that converts 43 miles to feet. Then the code should conver
 --- START PROGRAM ---
 
 Context: You generate top quality python code, paying careful attention to the details of the requirements.
+
 Question: Generate Python code that converts 43 miles to feet. Then the code should convert the 43 to yards. Then the code should print the conversion statement:  miles to feet. then the code should print the conversion statement:  miles to yards. Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it. Then the code should have error handling routines using traceback. Then the code should print a success message, and show the name of the file and what folder the file was saved to.
 
 ------------------
