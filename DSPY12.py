@@ -7,9 +7,6 @@ import traceback
 import dspy
 from transformers import BertTokenizer
 
-print("Inside DSPY12.py...")
-
-
 colbertv2_wiki17_abstracts = dspy.ColBERTv2(
     url="http://20.102.90.50:2017/wiki17_abstracts"
 )
@@ -24,14 +21,14 @@ colbertv2_wiki17_abstracts = dspy.ColBERTv2(
 try:
     MyLM = dspy.OpenAI(
         api_base="https://api.fireworks.ai/inference/v1/",
-        api_key="API_KEY",
+        api_key="API_KEY",  # <-- PUT YOUR FIREWORKS API KEY HERE
         #model="accounts/fireworks/models/mistral-7b-instruct-4k",
         model="accounts/fireworks/models/mixtral-8x22b-instruct",
-        temperature=0.6,
+        temperature=0.1,
         max_tokens=3000,
     )
     print("MyLM is initialized.")
-    dspy.settings.configure(lm=MyLM, rm=colbertv2_wiki17_abstracts, timeout=30)
+    dspy.settings.configure(lm=MyLM, rm=colbertv2_wiki17_abstracts, timeout=120)
     print("Settings are configured.")
     
 except Exception as e:
@@ -98,7 +95,7 @@ class GenerateTasks(dspy.Signature):
 
 
 def DoesImportModuleExist(code):
-    modules = re.findall(r"import\s+(\w+)", code)
+    modules = set(re.findall(r"import\s+(\w+)", code))  # Convert list to set to remove duplicates
     missing_modules = []
 
     for module_name in modules:
@@ -113,10 +110,19 @@ def DoesImportModuleExist(code):
             f"The following modules are not installed: {', '.join(missing_modules)}. Do you want to install them? (Y/N): "
         )
         if user_input.upper() == "Y":
-            import subprocess
-
             for module_name in missing_modules:
-                subprocess.run(["pip", "install", module_name])
+ 
+                import subprocess
+                 
+                try:
+                    result = subprocess.run(["pip", "install", module_name], check=True)
+                    print(f"Successfully installed {module_name}")
+                except subprocess.CalledProcessError as e:
+                    print(f"An error occurred while installing {module_name}: {str(e)}")
+                    user_input = input("An error occurred. Do you want to continue? (Y/N): ")
+                    if user_input.upper() == "N":
+                        print("Exiting the program.")
+                        sys.exit()
             return True
         else:
             return False
@@ -375,24 +381,25 @@ if __name__ == "__main__":
     #context = "You generate python code."
     #question = "Generatea python script that prints 'hello world' to the console."
 
-
-    input_value = 43
+    input_value = 23
     convert_from = "miles"
-    convert_to = "feet"
+    convert_to1  = "feet"
     convert_to2 = "yards"
-    context = "You generate top quality python code, paying careful attention to the details of the requirements."
+    convert_to3 = "meters"
+    context = "You generate top quality python code paying careful attention to the details of the requirements."
     
-    question = (f"Generate Python code that converts {input_value} {convert_from} to {convert_to}."
+    question = (f"Generate Python code that converts {input_value} {convert_from} to {convert_to1}."
                 f" Then the code should convert the {input_value} to {convert_to2}."
-                f" Then the code should print the conversion statement:  {convert_from} to {convert_to}."
+                f" Then the code should print the conversion statement:  {convert_from} to {convert_to1}."
                 f" then the code should print the conversion statement:  {convert_from} to {convert_to2}."
+                f" then the code should print the conversion statement:  {convert_from} to {convert_to3}."
                 f" Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it."
-                f" Then the code should have error handling routines."
+                f" Then the code should have error handling routines using traceback."
                 f" Then the code should print a success message, and show the name of the file and what folder the file was saved to."
+                f" Finally the generated code should be saved to a file named c:/temp/Code.py, and show the user the name of the file and what folder the file was saved to."
                 )
 
-
-    print("Inside DSPY12.py...")
+    print("Starting DSPY12.py...")
     print(context)
     print(question)
     main_program = Main(context, question)
