@@ -1,5 +1,56 @@
 # DSPY12.py OUTPUT
-This is the output of DSPY12.py ... note: a good deal of the output here are print statements to help trace the script's operations.  If / when I get to a final version, it will remove most of the print statements you see here.
+This is the output of DSPY12.py ... note: a good deal of the output here are print statements to help trace the script's operations.  If / when I get to a final version, it will remove most of the print statements you see here. 
+
+## DSPY12.py Features
+
+- Imports several libraries including dspy, transformers, importlib, subprocess, ast, and traceback.
+
+- Initializes a connection to a large language model (LLM) called MyLM through the dspy library.
+
+- Defines a class called MultiHop that inherits from the dspy.Module class. This class is designed to answer questions in a multi-hop fashion by combining retrieval and reasoning steps.
+
+- Defines a class called GenerateTasks that inherits from the dspy.Signature class. This class is designed to generate a list of tasks from a given context and question.
+
+- Defines a function called DoesImportModuleExist that checks if all the required modules are installed for the provided code. If not, it asks the user if they want to install them.
+
+- Defines a function called validate_python_code_ast that validates the Python code using the ast library.
+
+- Defines a function called ValidateCodeMatchesTask that checks if the generated code fulfills all the requirements specified in the task list.
+
+- Defines a function called run_code that executes the provided Python code.
+
+- Defines a function called run_python_code that compiles and executes the provided Python code after performing safety checks such as AST validation.
+
+- Defines a function called process_generated_code that cleans the generated code.
+
+- Defines a recursive function called GenCode that generates Python code to fulfill a given task by interacting with the MyLM model.
+
+- Defines a class called Main that takes a context and question as input and executes the entire program flow. This includes generating tasks, generating code, validating the code, and finally running the code.
+----
+## Initial Input Question
+
+```
+    input_value = 45
+    convert_from = "miles"
+    convert_to = "feet"
+    convert_to2 = "yards"
+    context = "You generate top quality python code, paying careful attention to the details of the requirements."
+    
+    question = (f"Generate Python code that converts {input_value} {convert_from} to {convert_to}."
+                f" Then the code should convert the {input_value} to {convert_to2}."
+                f" Then the code should print the conversion statement:  {convert_from} to {convert_to}."
+                f" then the code should print the conversion statement:  {convert_from} to {convert_to2}."
+                f" Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it."
+                f" Then the code should have error handling routines using traceback."
+                f" Then the code should print a success message, and show the name of the file and what folder
+                     the file was saved to."
+                f" Finally, write the generated code out to a file c:/temp/code.py, and show the name of the file and what 
+                     folder the code file was saved to."
+                )
+```
+----
+
+## Output from Program to Console:
 
 ----
 MyLM is initialized.
