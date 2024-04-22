@@ -1,11 +1,14 @@
  
 import re
-import importlib
 import sys
 import ast
-import traceback
 import dspy
+import importlib
+import traceback
 from transformers import BertTokenizer
+
+print("Inside DSPY12.py...")
+
 
 colbertv2_wiki17_abstracts = dspy.ColBERTv2(
     url="http://20.102.90.50:2017/wiki17_abstracts"
@@ -21,21 +24,57 @@ colbertv2_wiki17_abstracts = dspy.ColBERTv2(
 try:
     MyLM = dspy.OpenAI(
         api_base="https://api.fireworks.ai/inference/v1/",
-        api_key="API_KEY",  # <-- PUT YOUR FIREWORKS API KEY HERE
+        api_key="API_KEY",
         #model="accounts/fireworks/models/mistral-7b-instruct-4k",
         model="accounts/fireworks/models/mixtral-8x22b-instruct",
-        temperature=0.1,
+        temperature=0.6,
         max_tokens=3000,
     )
     print("MyLM is initialized.")
-    dspy.settings.configure(lm=MyLM, rm=colbertv2_wiki17_abstracts, timeout=120)
+    dspy.settings.configure(lm=MyLM, rm=colbertv2_wiki17_abstracts, timeout=30)
     print("Settings are configured.")
     
 except Exception as e:
     tb = traceback.format_exc()
     print(f"There was an Error: {e}\n{tb}", file=sys.stderr)
 
- 
+
+def identify_language(code):
+    """
+    Attempts to identify the language of the provided code snippet.
+
+    Args:
+      code: The code string to identify.
+
+    Returns:
+      A string representing the identified language, e.g., 'python', 'csharp', 'vbnet', etc.
+    """
+    """Determine the programming language and return the language name as a string."""
+
+    # Define the context and question as strings directly, not as dspy.InputField objects
+    contextL = "You are a programming expert who can determine what language a code block is written in."
+    questionL = "What is the name of the programming language of this code: " + code
+
+    def forward(contextL, questionL):
+        print("Inside identify_language...")
+        
+        # NOTE: PREDICT IS INFERIOR TO CHAINOFTHOUGHT
+        pred_Language1 = dspy.Predict("context, code -> language")
+        ProgLanguage1 = pred_Language1(context=contextL, code=questionL) # Ensure 'code' is correctly passed
+        
+        #pred_Language2 = dspy.ChainOfThought("context, code -> language")
+        #ProgLanguage2 = pred_Language2(context=contextL, code=questionL) # Ensure 'code' is correctly passed
+        
+        #print("ProgLanguage1: " + str(ProgLanguage1.language))
+        #print("ProgLanguage2: " + str(ProgLanguage2.language))
+        
+        # USE CHAIN OF THOUGHT RESULTS
+        return str(ProgLanguage1.language)
+
+    # Call the forward function with the appropriate arguments
+    return forward(contextL, questionL)
+
+    
 class MultiHop(dspy.Module):
     def __init__(self, lm, passages_per_hop=3):
         self.Generate_query = dspy.ChainOfThought("context, question -> query")
@@ -68,7 +107,6 @@ class MultiHop(dspy.Module):
         return self.generate_answer(context=context_list, question=question)
 
 
-
 class GenerateTasks(dspy.Signature):
     """Generate a list of tasks in structured format."""
 
@@ -80,8 +118,8 @@ class GenerateTasks(dspy.Signature):
         print("Inside GenerateTasks...")
         
         # NOTE: PREDICT IS INFERIOR TO CHAINOFTHOUGHT
-        pred_generate_tasks = dspy.Predict("context, question -> tasks")
-        TasksList = pred_generate_tasks(context=context, question=question)
+        # pred_generate_tasks = dspy.Predict("context, question -> tasks")
+        # TasksList = pred_generate_tasks(context=context, question=question)
         
         pred_generate_tasks2 = dspy.ChainOfThought("context, question -> tasks")
         TasksList2 = pred_generate_tasks2(context=context, question=question)
@@ -95,7 +133,7 @@ class GenerateTasks(dspy.Signature):
 
 
 def DoesImportModuleExist(code):
-    modules = set(re.findall(r"import\s+(\w+)", code))  # Convert list to set to remove duplicates
+    modules = re.findall(r"import\s+(\w+)", code)
     missing_modules = []
 
     for module_name in modules:
@@ -110,19 +148,10 @@ def DoesImportModuleExist(code):
             f"The following modules are not installed: {', '.join(missing_modules)}. Do you want to install them? (Y/N): "
         )
         if user_input.upper() == "Y":
+            import subprocess
+
             for module_name in missing_modules:
- 
-                import subprocess
-                 
-                try:
-                    result = subprocess.run(["pip", "install", module_name], check=True)
-                    print(f"Successfully installed {module_name}")
-                except subprocess.CalledProcessError as e:
-                    print(f"An error occurred while installing {module_name}: {str(e)}")
-                    user_input = input("An error occurred. Do you want to continue? (Y/N): ")
-                    if user_input.upper() == "N":
-                        print("Exiting the program.")
-                        sys.exit()
+                subprocess.run(["pip", "install", module_name])
             return True
         else:
             return False
@@ -170,22 +199,33 @@ def ValidateCodeMatchesTask(CodeBlock, task):
         question=EvalQuestion,
     )
     print("** EVAL RESPONSE ****************************************************** \n")
-    print(response)
+    print(response.rationale)
     print("** END EVALUATION ***************************************************** \n")
 
     return response
 
-def run_code(Code_Block):
+#def run_code(Code_Block):
+#    print("Running the code...")
+#    try:
+#        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
+#        run_python_code(Code_Block)
+#        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
+#    except Exception as e:
+#        print(f"Failed to run code: {e}")
+#        sys.exit(1)
+
+def run_code(Code_Block, language):
     print("Running the code...")
-    try:
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
-        run_python_code(Code_Block)
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
-    except Exception as e:
-        print(f"Failed to run code: {e}")
-        sys.exit(1)
-
-
+    if language.lower() == "python":
+        try:
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
+            run_python_code(Code_Block)
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! \n")
+        except Exception as e:
+            print(f"Failed to run code: {e}")
+            sys.exit(1)
+    else:
+        print("This is non-executable source code so we will not run it.")
 
 def run_python_code(code):
     try:
@@ -271,6 +311,40 @@ def process_generated_code(code):
     cleaned_code = cleaned_code.replace("```", "***", 1)
     return cleaned_code
 
+ 
+def extract_code_block(generated_code, inpLanguage):
+    print("Inside extract_code_block...")
+    
+    # SET CODE BLOCK IN CASE NO MARKERS ARE FOUND
+    code_block = generated_code
+    language = ""
+    # Find the start of the code block
+    start_marker_pattern = r"```(\w+)?"
+    start_match = re.search(start_marker_pattern, generated_code)
+    if start_match:
+        start_marker = start_match.group()
+        start_index = start_match.start()
+        
+        # Find the end of the code block
+        end_marker = start_marker[:3]
+        end_index = generated_code.find(end_marker, start_index + len(start_marker))
+        if end_index != -1:
+            code_block = generated_code[start_index + len(start_marker):end_index].strip()
+            
+            # Determine the language
+            language_match = re.search(r"(\w+)", start_marker)
+            if language_match:
+                language = language_match.group(1).lower()
+            else:
+                language = None
+            
+            if inpLanguage != language:
+                print("Note: input language did not match found language")
+                print("inpLanguage: " + str(inpLanguage) + ", Language: " + str(language))
+                
+            return code_block 
+    
+    return code_block, language
 
 def GenCode(context, task, depth=0, max_depth=5):
     print("Enter GenCode (" + str(depth) + ")...")
@@ -280,33 +354,24 @@ def GenCode(context, task, depth=0, max_depth=5):
 
     try:
         generated_code = response.answer
-        generated_code = generated_code.replace("Â ", "")
-        generated_code = generated_code.replace("```", "***", 1)
-        generated_code = generated_code.replace("```", "***", 1)
         print("-- GENERATED CODE -----------------------")
         print(generated_code)
         print("-----------------------------------------")
 
         isCodeValid = ValidateCodeMatchesTask(generated_code, task)
-        print("IsCodeValid: " + str(isCodeValid))
+        print("IsCodeValid: " + str(isCodeValid.answer))
 
         if isCodeValid:
             print("IsCodeValid is True...")
             print(generated_code)
-            if generated_code:
-                start_marker = "***python"
-                end_marker = "***"
-
-                start = generated_code.find(start_marker) + len(start_marker)
-                end = generated_code.find(end_marker, start)
-
-                python_code = generated_code[start:end].strip()
-                return python_code
+            return generated_code   #THE GENERATED CODE CAN COME WITH EXPLANATION TEXT, SO WE WILL TRY TO EXTRACT THE CODE AFTER
+            
         else:
             if depth >= max_depth:
                 raise ValueError("Maximum recursion depth reached")
             else:
-                GenCode(context, task, depth=depth + 1)
+                # IF THE CODE DID NOT COME BACK AS VALID THEN RETRY INCLUDING THE RATIONALE GIVEN FOR THE INVALID CODE
+                GenCode(context + " rationale: " + isCodeValid.rationale, task, depth=depth + 1)
 
     except Exception as e:
         tb = traceback.format_exc()
@@ -322,7 +387,7 @@ class Main:
 
     def execute(self):
        try:
-           print("--- START PROGRAM ---\n\n")
+           print("\n--- START PROGRAM ---\n")
            print("Context: " + context)
            print("Question: " + question)
            print("------------------")
@@ -339,34 +404,50 @@ class Main:
                print("=================================================")
     
                code = GenCode(context=context, task=question)
-               Code_Block = process_generated_code(code)
-    
-               print("Validate code...")
+               language = identify_language(code)
+               
+               # EXTRACT JUST THE CODE BLOCK IF POSSIBLE - IF NOT RETURN THE ORIGINAL CODE 
+               code = extract_code_block(code, language.lower())
+
+               if language.lower() == "python":
+                   Code_Block = process_generated_code(code)
+               else:
+                   Code_Block = code
+ 
+               print("Language: " + str(language.lower()))
+               
+               print("Validating code...")
                CodeValidated = ValidateCodeMatchesTask(CodeBlock=Code_Block, task=tasks)
-               print("Is code valid: " + str(CodeValidated))
+               print("Is code valid: " + str(CodeValidated.answer))
     
                if CodeValidated:
-                   ast_valid = validate_python_code_ast(Code_Block)
-                   print("AST Validation A: " + str(ast_valid))
-                   if not ast_valid:
-                       print(f"Code failed AST validation.")
-                       # Add the error message to the context
-                       self.context += f"\n Unfortunately, the following python code failed AST validation. Please regenerate the code and fix this error: " + Code_Block + "\n Error:" + ast_valid
-                       # Recursively call GenCode with the updated context
-                       code = GenCode(context=self.context, task=self.question)
-                       Code_Block = process_generated_code(code)
-                       # Validate the new code
-                       CodeTaskValidated = ValidateCodeMatchesTask(CodeBlock=Code_Block, task=tasks)
-                       ASTValidated = validate_python_code_ast(Code_Block)
-                       if CodeTaskValidated and ASTValidated:
+                   
+                   if language.lower() == "python":
+                       ast_valid = validate_python_code_ast(Code_Block)
+                       print("AST Validation A: " + str(ast_valid))
+                       if not ast_valid:
+                           print(f"Code failed AST validation.")
+                           # Add the error message to the context
+                           self.context += f"\n Unfortunately, the following python code failed AST validation. Please regenerate the code and fix this error: " + Code_Block + "\n Error:" + ast_valid
+                           # Recursively call GenCode with the updated context
+                           code = GenCode(context=self.context, task=self.question)
+                           Code_Block = process_generated_code(code)
+                           # Validate the new code
+                           CodeTaskValidated = ValidateCodeMatchesTask(CodeBlock=Code_Block, task=tasks)         # WIP - SIMPLIFY - BEING CALLED TWICE
+                           ASTValidated = validate_python_code_ast(Code_Block)
+                           if CodeTaskValidated and ASTValidated:
+                               print("Code has been processed!")
+                               run_code(Code_Block)
+                           else:
+                               print("Code failed validation.")
+                               sys.exit(1)
+                       else:
                            print("Code has been processed!")
                            run_code(Code_Block)
-                       else:
-                           print("Code failed validation.")
-                           sys.exit(1)
                    else:
-                       print("Code has been processed!")
-                       run_code(Code_Block)
+                        with open("c:/Temp/Generated_code.txt", "w") as file:
+                            file.write(Code_Block)
+                        print("This code is non-executable "+language+" source code, therefore we will not attempt to run it.  Code has been saved to disk instead.")
                else:
                    print(f"Task code failed validation for task: {task}")
                    sys.exit(1)
@@ -380,28 +461,21 @@ if __name__ == "__main__":
     
     #context = "You generate python code."
     #question = "Generatea python script that prints 'hello world' to the console."
-
-    input_value = 23
-    convert_from = "miles"
-    convert_to1  = "feet"
-    convert_to2 = "yards"
-    convert_to3 = "meters"
-    context = "You generate top quality python code paying careful attention to the details of the requirements."
     
-    question = (f"Generate Python code that converts {input_value} {convert_from} to {convert_to1}."
-                f" Then the code should convert the {input_value} to {convert_to2}."
-                f" Then the code should print the conversion statement:  {convert_from} to {convert_to1}."
-                f" then the code should print the conversion statement:  {convert_from} to {convert_to2}."
-                f" then the code should print the conversion statement:  {convert_from} to {convert_to3}."
-                f" Then the code should create a file c:/temp/conversion.txt with the printed conversion statements in it."
-                f" Then the code should have error handling routines using traceback."
-                f" Then the code should print a success message, and show the name of the file and what folder the file was saved to."
-                f" Finally the generated code should be saved to a file named c:/temp/Code.py, and show the user the name of the file and what folder the file was saved to."
+    context = ("You generate top quality, professional, vb.net code, paying careful attention to the details to ensure your code meets the requirements." 
+               " You always double check your code to ensure nothing has been left out."
+               " Your job is to only write the code, and that is all.  Your job is only to write the vb.net code, not to create the project, deploy or to test it."
+               )
+               
+    question = (f" Generate a windows service in vb.net that monitors the windows events log."
+                f" The windows service should use an ai model hosted at http://localhost:1234/v1/ in order to provide an Alert when unusual behavior is occuring on the machine that indicates a high probability of the existance of a virus or hacker."
+                f" The windows service should send the Alert by email to somebody@yahoo.com when the service indicates the existance of a virus or hacker."
+                f" The windows service should use professional error handling."
+                f" The windows service should log any virus or hacker Alerts to c:/Temp/AIMonitor.log"
                 )
 
-    print("Starting DSPY12.py...")
+    print("Inside DSPY12.py...")
     print(context)
     print(question)
     main_program = Main(context, question)
     main_program.execute()
-    
