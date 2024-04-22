@@ -437,12 +437,17 @@ class Main:
                            ASTValidated = validate_python_code_ast(Code_Block)
                            if CodeTaskValidated and ASTValidated:
                                print("Code has been processed!")
+                               with open("c:/Temp/Generated_code.txt", "w") as file:
+                                   file.write(Code_Block)                               
                                run_code(Code_Block)
+                               
                            else:
                                print("Code failed validation.")
                                sys.exit(1)
                        else:
                            print("Code has been processed!")
+                           with open("c:/Temp/Generated_code.txt", "w") as file:
+                               file.write(Code_Block)                           
                            run_code(Code_Block)
                    else:
                         with open("c:/Temp/Generated_code.txt", "w") as file:
