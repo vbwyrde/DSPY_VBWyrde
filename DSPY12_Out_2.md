@@ -3,29 +3,18 @@ This is the output of DSPY12.py ... note: a good deal of the output here are pri
 
 ## DSPY12.py Features
 
-- Imports several libraries including dspy, transformers, importlib, subprocess, ast, and traceback.
-
-- Initializes a connection to a large language model (LLM) called MyLM through the dspy library.
-
-- Defines a class called MultiHop that inherits from the dspy.Module class. This class is designed to answer questions in a multi-hop fashion by combining retrieval and reasoning steps.
-
-- Defines a class called GenerateTasks that inherits from the dspy.Signature class. This class is designed to generate a list of tasks from a given context and question.
-
-- Defines a function called DoesImportModuleExist that checks if all the required modules are installed for the provided code. If not, it asks the user if they want to install them.
-
-- Defines a function called validate_python_code_ast that validates the Python code using the ast library.
-
-- Defines a function called ValidateCodeMatchesTask that checks if the generated code fulfills all the requirements specified in the task list.
-
-- Defines a function called run_code that executes the provided Python code.
-
-- Defines a function called run_python_code that compiles and executes the provided Python code after performing safety checks such as AST validation.
-
-- Defines a function called process_generated_code that cleans the generated code.
-
-- Defines a recursive function called GenCode that generates Python code to fulfill a given task by interacting with the MyLM model.
-
-- Defines a class called Main that takes a context and question as input and executes the entire program flow. This includes generating tasks, generating code, validating the code, and finally running the code.
+* `identify_language(code)`: This function takes a code snippet (`code`) as input and attempts to identify the programming language used in the code. It utilizes a ChainOfThought method to query the language model (`MyLM`) and returns the language name as a string (e.g., "python", "csharp").
+* `MultiHop(dspy.Module)`: This class defines a multi-hop reasoning module that can be used to ask questions in a step-by-step manner. It takes a language model (`lm`) and the number of hops (`passages_per_hop`) as input during initialization. The `forward` method of this class takes the context (`context`) and question (`question`) as input and uses the ChainOfThought method to generate a sequence of questions and retrieve relevant passages. Finally, it utilizes another ChainOfThought method to answer the original question based on the accumulated information. 
+* `GenerateTasks(dspy.Signature)`: This class defines the signature for the `GenerateTasks` function. It specifies the input and output fields for the function. The context (`context`) and question (`question`) are the input fields, and the tasks (`tasks`) is the output field. The tasks field is expected to be a list containing the generated tasks in a structured format.
+* `DoesImportModuleExist(code)`: This function checks if the required modules are installed for the provided code (`code`). It uses regular expressions to find all import statements and then tries to import the mentioned modules using `importlib.import_module`. If any module is missing, it prompts the user for installation and potentially installs them using `subprocess.run`. It returns True if all modules are installed or if the user confirms the installation, otherwise it returns False.
+* `validate_python_code_ast(code)`: This function attempts to parse the provided Python code (`code`) using the `ast.parse` function. If the parsing is successful, it returns True, otherwise it returns the encountered error. 
+* `ValidateCodeMatchesTask(CodeBlock, task)`: This function takes a code block (`CodeBlock`) and a task (`task`) as input and evaluates if the code fulfills all the requirements specified in the task. It leverages the `MultiHop` class to create a new instance with the language model (`MyLM`) and then uses the `forward` method to ask the LM if the code meets all the requirements. It returns the response object containing the answer (True/False) and the rationale provided by the LM.
+* `run_code(Code_Block, language)`: This function executes the provided code (`CodeBlock`). It first checks the language (`language`) and if it's Python, it attempts to run the code using `exec`. Before running the code, it performs several checks including checking for dangerous code patterns using a prediction method (`Pred`), attempting AST validation (`validate_python_code_ast`), and prompting for user confirmation if the code is flagged as potentially unsafe. 
+* `process_generated_code(code)`: This function performs any cleaning or pre-processing steps on the generated code (`code`). In the current implementation, it replaces some special characters.
+* `extract_code_block(generated_code, inpLanguage)`: This function extracts the code block from the provided code (`generated_code`). It searches for specific markers (```) to identify the code block and extracts the content between the markers. It also attempts to determine the code language based on the markers. 
+* `GenCode(context, task, depth=0, max_depth=5)`: This function recursively generates code using a multi-hop approach. It takes the context (`context`), task (`task`), current depth (`depth`), and maximum depth (`max_depth`) as input. It utilizes the `MultiHop` class to generate an initial code snippet and then validates the generated code against the task using the `ValidateCodeMatchesTask` function. If the validation fails and the maximum depth is not reached, it retries the generation process with an updated context that includes the rationale for the failed validation. This recursive process continues until the generated code meets the requirements or the maximum depth is reached.
+* `Main`: This class defines the main program that takes the context (`context`) and question (`question`) as input and executes the entire code generation process. It first calls the `GenerateTasks` function to get the list of tasks. Then, it calls the `GenCode` function to generate the code for each task. The generated code is then validated, processed, and potentially executed.  
+ 
 ----
 ## Initial Input Question
 
