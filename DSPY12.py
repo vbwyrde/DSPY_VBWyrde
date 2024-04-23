@@ -232,7 +232,7 @@ def ValidateCodeMatchesTask(CodeBlock, TasksList):
     print(EvalQuestion)
     multihop = MultiHop(MyLM)
     response = multihop.forward(
-        context="You are a Quality Assurance expert python programmer who evalutes code to determine if it meets all of the the requirements. Every item in the task list must be met by the code. Return True or False.",
+        context="You are a Quality Assurance expert programmer who evalutes code to determine if it meets all of the the requirements. Every item in the task list must be met by the code. Return True or False.",
         question=EvalQuestion,
     )
     print("** EVAL RESPONSE ****************************************************** \n")
